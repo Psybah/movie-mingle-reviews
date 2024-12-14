@@ -1,69 +1,104 @@
-# Welcome to your Lovable project
+# Movie Mingle Reviews
 
-## Project info
+Movie Mingle Reviews is a single-page movie database application where users can search for movies, read detailed descriptions, and share their own reviews. The app leverages modern web development tools and practices to deliver an interactive and visually appealing experience.
 
-**URL**: https://lovable.dev/projects/84d16601-11a0-4cce-a94d-777d3a76f27f
+## Features
+- **Search Bar:** Quickly search for movies by title.
+- **Movie Details:** View detailed descriptions, ratings, and other metadata for each movie.
+- **Comment Section:** Leave and read reviews for each movie.
+- **Responsive Design:** Optimized for various screen sizes and devices.
+- **Movie API Integration:** Fetches movie data from a third-party API.
 
-## How can I edit this code?
+## Tech Stack
+This project is built with:
+- **[Vite](https://vitejs.dev/):** For fast and efficient development.
+- **[TypeScript](https://www.typescriptlang.org/):** Ensures type safety and scalability.
+- **[React](https://reactjs.org/):** A robust library for building the user interface.
+- **[Tailwind CSS](https://tailwindcss.com/):** For utility-first, responsive styling.
+- **[shadcn/ui](https://shadcn.dev/):** Provides elegant UI components to enhance the design.
 
-There are several ways of editing your application.
+## Installation
 
-**Use Lovable**
+To run this project locally:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/84d16601-11a0-4cce-a94d-777d3a76f27f) and start prompting.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Psybah/movie-mingle-reviews.git
+   cd movie-mingle-reviews
+   ```
 
-Changes made via Lovable will be committed automatically to this repo.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-**Use your preferred IDE**
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+4. Open your browser and navigate to:
+   ```
+   http://localhost:3000
+   ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## API Configuration
 
-Follow these steps:
+1. Sign up for an API key from a movie database provider like [OMDb API](https://www.omdbapi.com/) or [TMDB](https://www.themoviedb.org/).
+2. Create a `.env` file in the root directory and add your API key:
+   ```env
+   VITE_API_KEY=your_api_key_here
+   VITE_API_BASE_URL=https://api.themoviedb.org/3
+   ```
+3. Restart the development server to apply the changes.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## Scripts
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+Here are the commonly used npm scripts for this project:
+- **`npm run dev`**: Starts the development server.
+- **`npm run build`**: Builds the project for production.
+- **`npm run preview`**: Previews the production build.
+- **`npm run lint`**: Runs linters to ensure code quality.
 
-# Step 3: Install the necessary dependencies.
-npm i
+## Folder Structure
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+The project follows a structured folder hierarchy for maintainability:
+```
+movie-mingle-reviews/
+├── src/
+│   ├── components/       # Reusable UI components
+│   ├── pages/            # Page-level components
+│   ├── services/         # API-related logic
+│   ├── styles/           # Global styles
+│   ├── types/            # TypeScript types
+│   └── App.tsx           # Main application component
+├── public/               # Static assets
+├── .env                  # Environment variables
+├── tailwind.config.js    # Tailwind CSS configuration
+├── vite.config.ts        # Vite configuration
+└── package.json          # Project metadata and dependencies
 ```
 
-**Edit a file directly in GitHub**
+## Contributions
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Contributions are welcome! To contribute:
+1. Fork the repository.
+2. Create a new branch:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+3. Commit your changes and push:
+   ```bash
+   git commit -m "Add your commit message"
+   git push origin feature/your-feature-name
+   ```
+4. Submit a pull request.
 
-**Use GitHub Codespaces**
+## License
+This project is licensed under the [MIT License](LICENSE).
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Contact
+For any inquiries or feedback, feel free to reach out through the repository's [issues page](https://github.com/Psybah/movie-mingle-reviews/issues).
 
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/84d16601-11a0-4cce-a94d-777d3a76f27f) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+---
+Thank you for exploring **Movie Mingle Reviews**! Enjoy your journey into the world of movies!
