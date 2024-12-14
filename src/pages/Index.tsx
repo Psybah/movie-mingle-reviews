@@ -5,6 +5,7 @@ import { MovieDialog } from "@/components/MovieDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
+import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 interface Movie {
   id: number;
@@ -59,21 +60,21 @@ const Index = () => {
   useEffect(() => {
     const channel = supabase
       .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
+      .on<Movie>(
+        'postgres_changes' as const,
         {
           event: '*',
           schema: 'public',
           table: 'movies'
         },
-        (payload: { new: Movie }) => {
+        (payload: RealtimePostgresChangesPayload<Movie>) => {
           setMovies(current => {
             const updated = [...current];
-            const index = updated.findIndex(movie => movie.id === payload.new.id);
+            const index = updated.findIndex(movie => movie.id === (payload.new as Movie).id);
             if (index !== -1) {
-              updated[index] = payload.new;
+              updated[index] = payload.new as Movie;
             } else {
-              updated.push(payload.new);
+              updated.push(payload.new as Movie);
             }
             return updated;
           });
