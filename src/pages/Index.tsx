@@ -1,57 +1,110 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { MovieCard } from "@/components/MovieCard";
 import { MovieDialog } from "@/components/MovieDialog";
-
-// Mock data for initial version
-const MOCK_MOVIES = [
-  {
-    id: 1,
-    title: "Inception",
-    year: "2010",
-    rating: 8.8,
-    poster: "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg",
-    plot: "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.",
-    director: "Christopher Nolan",
-    cast: ["Leonardo DiCaprio", "Joseph Gordon-Levitt", "Ellen Page"]
-  },
-  {
-    id: 2,
-    title: "The Dark Knight",
-    year: "2008",
-    rating: 9.0,
-    poster: "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX300.jpg",
-    plot: "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.",
-    director: "Christopher Nolan",
-    cast: ["Christian Bale", "Heath Ledger", "Aaron Eckhart"]
-  },
-  {
-    id: 3,
-    title: "Pulp Fiction",
-    year: "1994",
-    rating: 8.9,
-    poster: "https://m.media-amazon.com/images/M/MV5BNGNhMDIzZTUtNTBlZi00MTRlLWFjM2ItYzViMjE3YzI5MjljXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX300.jpg",
-    plot: "The lives of two mob hitmen, a boxer, a gangster and his wife, and a pair of diner bandits intertwine in four tales of violence and redemption.",
-    director: "Quentin Tarantino",
-    cast: ["John Travolta", "Uma Thurman", "Samuel L. Jackson"]
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useDebounce } from "@/hooks/use-debounce";
 
 const Index = () => {
   const [selectedMovie, setSelectedMovie] = useState(null);
-  const [movies, setMovies] = useState(MOCK_MOVIES);
+  const [movies, setMovies] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { toast } = useToast();
+  
+  // Add debounce hook for search
+  const useDebounce = (value: string, delay: number) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+  
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+  
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+  
+    return debouncedValue;
+  };
 
-  const handleSearch = (query: string) => {
-    if (!query) {
-      setMovies(MOCK_MOVIES);
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) {
+      setMovies([]);
       return;
     }
-    const filtered = MOCK_MOVIES.filter(movie =>
-      movie.title.toLowerCase().includes(query.toLowerCase())
-    );
-    setMovies(filtered);
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/search-movies`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ query }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Search failed');
+      }
+
+      const data = await response.json();
+      setMovies(data);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to search movies. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'movies'
+        },
+        (payload) => {
+          setMovies(current => {
+            const updated = [...current];
+            const index = updated.findIndex(movie => movie.id === payload.new.id);
+            if (index !== -1) {
+              updated[index] = payload.new;
+            } else {
+              updated.push(payload.new);
+            }
+            return updated;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const debouncedSearch = useDebounce(query, 500);
+
+  useEffect(() => {
+    if (debouncedSearch) {
+      handleSearch(debouncedSearch);
+    }
+  }, [debouncedSearch]);
 
   return (
     <div className="min-h-screen p-6 space-y-8">
@@ -65,21 +118,25 @@ const Index = () => {
         <SearchBar onSearch={handleSearch} />
       </div>
 
-      <div className="movie-grid">
-        {movies.map((movie) => (
-          <MovieCard
-            key={movie.id}
-            title={movie.title}
-            year={movie.year}
-            poster={movie.poster}
-            rating={movie.rating}
-            onClick={() => {
-              setSelectedMovie(movie);
-              setDialogOpen(true);
-            }}
-          />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="text-center">Loading...</div>
+      ) : (
+        <div className="movie-grid">
+          {movies.map((movie) => (
+            <MovieCard
+              key={movie.id}
+              title={movie.title}
+              year={movie.year}
+              poster={movie.poster_path}
+              rating={movie.rating}
+              onClick={() => {
+                setSelectedMovie(movie);
+                setDialogOpen(true);
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       <MovieDialog
         movie={selectedMovie}
