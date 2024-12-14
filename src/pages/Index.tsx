@@ -6,31 +6,30 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
 
+interface Movie {
+  id: number;
+  title: string;
+  year: string;
+  poster_path: string;
+  rating: number;
+  plot: string;
+  director: string;
+  cast_members: string[];
+}
+
 const Index = () => {
-  const [selectedMovie, setSelectedMovie] = useState(null);
-  const [movies, setMovies] = useState([]);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [movies, setMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   
-  // Add debounce hook for search
-  const useDebounce = (value: string, delay: number) => {
-    const [debouncedValue, setDebouncedValue] = useState(value);
-  
-    useEffect(() => {
-      const handler = setTimeout(() => {
-        setDebouncedValue(value);
-      }, delay);
-  
-      return () => {
-        clearTimeout(handler);
-      };
-    }, [value, delay]);
-  
-    return debouncedValue;
-  };
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    
     if (!query.trim()) {
       setMovies([]);
       return;
@@ -83,9 +82,9 @@ const Index = () => {
             const updated = [...current];
             const index = updated.findIndex(movie => movie.id === payload.new.id);
             if (index !== -1) {
-              updated[index] = payload.new;
+              updated[index] = payload.new as Movie;
             } else {
-              updated.push(payload.new);
+              updated.push(payload.new as Movie);
             }
             return updated;
           });
@@ -98,13 +97,11 @@ const Index = () => {
     };
   }, []);
 
-  const debouncedSearch = useDebounce(query, 500);
-
   useEffect(() => {
-    if (debouncedSearch) {
-      handleSearch(debouncedSearch);
+    if (debouncedSearchQuery) {
+      handleSearch(debouncedSearchQuery);
     }
-  }, [debouncedSearch]);
+  }, [debouncedSearchQuery]);
 
   return (
     <div className="min-h-screen p-6 space-y-8">
@@ -121,14 +118,14 @@ const Index = () => {
       {isLoading ? (
         <div className="text-center">Loading...</div>
       ) : (
-        <div className="movie-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {movies.map((movie) => (
             <MovieCard
               key={movie.id}
               title={movie.title}
               year={movie.year}
               poster={movie.poster_path}
-              rating={movie.rating}
+              rating={movie.rating || 0}
               onClick={() => {
                 setSelectedMovie(movie);
                 setDialogOpen(true);
