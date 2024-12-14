@@ -37,25 +37,14 @@ const Index = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/search-movies`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({ query }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('search-movies', {
+        body: { query }
+      });
 
-      if (!response.ok) {
-        throw new Error('Search failed');
-      }
-
-      const data = await response.json();
-      setMovies(data);
+      if (error) throw error;
+      setMovies(data || []);
     } catch (error) {
+      console.error('Search error:', error);
       toast({
         title: "Error",
         description: "Failed to search movies. Please try again.",
@@ -77,14 +66,14 @@ const Index = () => {
           schema: 'public',
           table: 'movies'
         },
-        (payload) => {
+        (payload: { new: Movie }) => {
           setMovies(current => {
             const updated = [...current];
             const index = updated.findIndex(movie => movie.id === payload.new.id);
             if (index !== -1) {
-              updated[index] = payload.new as Movie;
+              updated[index] = payload.new;
             } else {
-              updated.push(payload.new as Movie);
+              updated.push(payload.new);
             }
             return updated;
           });
@@ -135,11 +124,21 @@ const Index = () => {
         </div>
       )}
 
-      <MovieDialog
-        movie={selectedMovie}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-      />
+      {selectedMovie && (
+        <MovieDialog
+          movie={{
+            title: selectedMovie.title,
+            year: selectedMovie.year,
+            poster: selectedMovie.poster_path,
+            rating: selectedMovie.rating || 0,
+            plot: selectedMovie.plot || '',
+            director: selectedMovie.director || '',
+            cast: selectedMovie.cast_members || []
+          }}
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+        />
+      )}
     </div>
   );
 };
